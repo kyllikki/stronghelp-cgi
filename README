@@ -19,53 +19,77 @@ To contact V Sanders email
 vince@kyllikki.fluff.org
 
 The main web site for this program is
-http://www.inkvine.fluff.org/~vince
+http://www.kyllikki.fluff.org/software
 
 sh-cgi uses cgi-util LGPL library by Bill Kendrick (see cgi-util directory)
 
 --------------------------------------------
 
-VERSION 0.95
+VERSION 1.00
 
-This is sh-cgi , it is a cgi gateway for the acess of stronghelp manuals by standard HTML browsers.
+This is sh-cgi , it is a cgi gateway for the acess of stronghelp manuals by 
+standard HTML browsers.
+
+Thanks should also be given to John Beranek <john.beranek@pace.co.uk> for
+some url escaping stuff (for c++ manual) and hints on some alignment stuff.
 
 Basic Setup
 -----------
 
 	Unpack the source tar.
 
-	Type make - Known to work on linux and solaris 2.6 (with gcc) currently.
+	Edit the Makefile if you want to change the cgis name.
+
+	Type make, Currently known to work on linux and solaris 2.6 (with gcc).
 
 	Install sh-cgi in your cgi-bin directory.
 
-	Create a directory named sh-manuals in your http document root, place all the stronghelp manuals you wish to server in this directory(note they should be named so they do not have any punctuation, ie no full stops commas etc or sh-cgi will ignore these files) please be careful with case as while acorn filesystems are case tolerant most unix filesystems are case sensitive ie Vdu and VDU for manual names are different! (note manuals that refer to other manuals cause this to be a problem ie they refer to VDU usualy not Vdu sh-cgi makes no attempt to match differing case manual names)
+	Create a directory named sh-manuals in your http document root, place 
+all the stronghelp manuals you wish to server in this directory(note they 
+should be named so they do not have any punctuation, ie no full stops commas 
+etc or sh-cgi will ignore these files) please be careful with case as while 
+acorn filesystems are case tolerant most unix filesystems are case sensitive 
+ie Vdu and VDU for manual names are different! (note manuals that refer to 
+other manuals cause this to be a problem ie they refer to VDU usualy not Vdu 
+sh-cgi makes no attempt to match differing case manual names)
 
 
-	If you would like background images (the stronghelp star) copy the background.gif image supplied to the sh-manuals directory as ".background.gif" (NOTE The dot!)
+	If you would like background images (the stronghelp star) copy the 
+background.gif image supplied to the sh-manuals directory as ".background.gif" 
+(NOTE The dot!)
 
-	Point a web browser at http://<your ww server/cgi-bin/sh-cgi
+	Point a web browser at http://<your www server/cgi-bin/sh-cgi>
 
 
 Other bits
 ----------
 
-	The directory used for the manuals can be set by changing the #define in sh-cgi.h
-	The background image name (possibly for using the background png file-beware browser incompatabilities) can be set by changing the #define in shhtml.h
-	The tags used for the fonts may be changed by editing the #defines in shhtml.h
+	The directory used for the manuals can be set by changing the #define 
+in sh-cgi.h
+	The background image name (possibly for using the background png file 
+- beware browser incompatabilities) can be set by changing the #define in 
+shhtml.h
+	The tags used for the fonts may be changed by editing the #defines in 
+shhtml.h
 
 
 Known Problems
 --------------
 
-	These bits have yet to be implemented or have issues (submit a patch :-)
+	These bits have yet to be implemented or have issues(submit a patch :-)
 
-	Currently there is no run-time config - in future i hope to have a .configure file in the sh-manuals directory.
+	Currently there is no run-time config - in future i hope to have a 
+.configure file in the sh-manuals directory.
 
-	Manual names have to be an exact case match in refering tags (unix case sensitivity issue).
+	Manual names have to be an exact case match in refering tags (unix 
+case sensitivity issue).
 
-	Manual names with any form of punctuation are omited from the manual list and cannot be referenced - sledgehammer way of ensuring nasty hackers cannot get the cgi to attempt to look outside of its "sandbox".
+	Manual names with any form of punctuation are omited from the manual 
+list and cannot be referenced - sledgehammer way of ensuring nasty hackers 
+cannot get the cgi to attempt to look outside of its "sandbox".
 
-	#spritefile and #sprite are not implemented currently - not too hard but i would have to ship a default set of risc os sprites ?!?
+	#spritefile and #sprite are not implemented currently - not too hard 
+but i would have to ship a default set of risc os sprites ?!?
 
 	#below ,#bottom and #draw are all likewise unimplemented.
 
@@ -77,9 +101,8 @@ Known Problems
 
 	#rgb isnt implemented.
 
-	subpages are not implemenetd - hence #subpage ,#tag and the subpage links dont work.
-
-	#align isnt fully done (only center atm) - if anyone knows how to abitrarily aligh html stuff tell me.
+	subpages are not implemenetd - hence #subpage ,#tag and the subpage 
+links dont work.
 
 	#wrap isnt implemented.
 

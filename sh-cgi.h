@@ -7,3 +7,5 @@
 
 #define SH_CGI_ROOT "sh-manuals"
 #define DIR_BUF_SIZE 1024
+
+int put_footer(int);

@@ -18,6 +18,46 @@
 #include "shhtml.h"
 #include "shif.h"
 
+static const char *hexchars = "0123456789ABCDEF";
+static const char *formchars = "?=+";
+
+char * escape_url(const char * s)
+{
+    /* Escape a URL, or bits of one Only escape space, top bit set and special
+       form characters. */
+    char *buffer = malloc(strlen(s)*3 + 1);
+    unsigned char c;
+    char *outp;
+
+    outp = buffer;
+
+    while ( (c = *s++) != 0)
+    {
+	if (c < 32 || c == 127)
+	{
+	    /* ignore */
+	}
+	else if (c >= 128 || (strchr (formchars,c) != 0))
+	{
+	    *outp++ = '%';
+	    *outp++ = hexchars[(c>>4) & 0xf];
+	    *outp++ = hexchars[(c>>0) & 0xf];
+	}
+        else if (c == ' ')
+        {
+            *outp++ = '+';
+        }
+	else
+	{
+	    *outp++ = c;
+	}
+    }
+
+    *outp = 0;
+
+    return buffer;
+}
+
 char * html_get_line(char * sh_page,long *cur_offset,long max_offset)
 {
     long wrk_offset = *cur_offset;
@@ -158,6 +198,60 @@ char *html_deescape_text(char * text)
     cur_text[0]=0;
     return deesc_text;
 }
+
+int put_href(char * url,char * link_text)
+{
+    char * lnk_txt;
+    /* we need to de-escape the link text here */
+    lnk_txt=html_deescape_text(link_text);
+    if (lnk_txt!=NULL)
+    {
+	printf("<a href=%s>%s</a>\n",url,lnk_txt);
+
+	free(lnk_txt);
+    }
+    else
+	printf("<!-- ran out of memory whilst producing link text -->\n");
+
+    return 0;    
+}
+
+int put_sh_href(char * manual_url,char * page_url,char * link_text)
+{
+
+    char *href_url;
+    href_url=malloc(strlen("/cgi-bin/"CGI_NAME"?manual=&page=")+strlen(manual_url)+strlen(page_url)+1);
+
+    if (href_url!=NULL)
+    {
+	manual_url=escape_url(manual_url);
+
+	if (strlen(page_url)!=0)	    
+	{	    
+	    page_url=escape_url(page_url);
+
+	    sprintf(href_url,"/cgi-bin/"CGI_NAME"?manual=%s&page=%s",
+		    manual_url,
+		    page_url);	
+
+	    free(page_url);
+	}	
+	else
+	    sprintf(href_url,"/cgi-bin/"CGI_NAME"?manual=%s",
+		    manual_url);
+
+	free(manual_url);
+
+	put_href(href_url,link_text);
+
+	free(href_url);
+    }
+    else
+	printf("<!-- ran out of memory whilst producing sh href -->\n");
+
+    return 0;
+}
+	    
 
 long html_fontprint(char *text,shhtml_status *page_status)
 {
@@ -334,18 +428,8 @@ long html_process_control_line(char *text,shhtml_status * page_status)
 	if (strncasecmp(text,"align",5)==0)
 	{
 	    /* turn off current alignment */
-	    switch(page_status->align)
-	    {
-	    case 0: /* nothing on */
-		break;
-	    case 1: /* left on */
-		break;
-	    case 2: /* centre on */
-		printf("</center>");
-		break;
-	    case 3: /* right on */
-		break;
-	    }
+	    if(page_status->align)
+		printf("</div>");
 
 	    /* left, centre,right*/
 	    switch(tolower(text[6]))
@@ -354,18 +438,20 @@ long html_process_control_line(char *text,shhtml_status * page_status)
 		if (strncasecmp(&text[6],"left",4)==0)
 		{
 		    page_status->align=1;
+		    printf("<div align=left>");
 		}
 		break;
 	    case 'c':
 		if (strncasecmp(&text[6],"centre",6)==0)
 		{
-		    printf("<center>");
+		    printf("<div align=center>");
 		    page_status->align=2;
 		}
 		break;
 	    case 'r':
 		if (strncasecmp(&text[6],"right",5)==0)
 		{
+		    printf("<div align=right>");
 		    page_status->align=3;
 		}
 		break;
@@ -583,7 +669,6 @@ char * skip_whitespace(char * in_str)
 long html_process_link(char* link,shhtml_status* page_status)
 {
     char * manual_name=page_status->manual_name;
-    char * link_name;
     char * link_page;
     char * text;
     char * page_link;
@@ -609,13 +694,13 @@ long html_process_link(char* link,shhtml_status* page_status)
 	link_page=strdup(text);
     }
 
-    /* we need to de-escape the link text here */
-    link_name=html_deescape_text(link);
-
     if (!strncasecmp(link_page,"#url",4))
     {
 	/* real url*/
-	printf("<a href=%s>%s</a>\n",&link_page[5],link_name);
+	if (strlen(link_page)==4)
+	    put_href(link,link);/* the link name is the url! */
+	else
+	    put_href(&link_page[5],link);
     }
     else
     {
@@ -637,11 +722,11 @@ long html_process_link(char* link,shhtml_status* page_status)
 	/* strip preceading spaces from the page_link */
 	page_link = skip_whitespace(page_link);
 
-	printf("<a href=\"/cgi-bin/sh-cgi?manual=%s&page=%s\">%s</a>\n",manual_name,page_link,link_name);
+	put_sh_href(manual_name,page_link,link);
+
     }
 
     free(link_page);
-    free(link_name);
 
     return 0;
 }
@@ -853,8 +938,8 @@ int html_output(FILE * imagef,char * manual_name,char * sh_page,long sh_page_len
     }
     /* put our footer in as a comment */
 
-    printf("<!-- This document was produced by sh-cgi a cgi gateway for stronghelp files. sh-cgi was written by V.R.Sanders (vince@kyllikki.fluff.org). sh-cgi is released under GPL version 2 and uses cgi-util a LGPL library by Bill Kendrick sh-cgi is available from http://www.inkvine.fluff.org/~vince -->");
-
+    put_footer(1);
+    
     printf("</body>\n");
     return 0;
 

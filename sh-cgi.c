@@ -20,7 +20,7 @@
  * vince@kyllikki.fluff.org
  *
  * The main web site for this program is
- * http://www.inkvine.fluff.org/~vince
+ * http://www.kyllikki.fluff.org/software
  *
  * sh-cgi uses cgi-util LGPL library by Bill Kendrick (see cgi-util directory)
  */
@@ -41,6 +41,20 @@
 #include "shhtml.h"
 #include "shif.h"
 #include "sh-cgi.h"
+
+int put_footer(int back_ptr)
+{
+    printf("<!-- This document was produced by sh-cgi (version "VERSION" Built "BUILDDATE") a cgi gateway for stronghelp files.\n");
+    printf("sh-cgi was written by V.R.Sanders (vince@kyllikki.fluff.org).\n");
+    printf("sh-cgi is released under GPL version 2 and uses cgi-util a LGPL library by Bill Kendrick.\n");
+    printf("sh-cgi homepage is http://www.kyllikki.fluff.org/software -->\n");
+
+    if (back_ptr)
+	printf("<hr><div align=left><small>["CGI_NAME"]&nbsp;<a href=\""CGI_NAME"\">Back to list of manuals</a></div>\n");
+
+    return back_ptr;
+    
+}
 
 int send_error(const char * err_txt)
 {
@@ -99,11 +113,17 @@ int sh_manual_list(char* doc_root)
     while(dir_entry!=NULL)
     {
 	if (index(dir_entry->d_name,'.')==NULL)
-	    printf("<p><a href=/cgi-bin/sh-cgi?manual=%s>%s<a></p>\n",dir_entry->d_name,dir_entry->d_name);
+	{
+	    put_sh_href(dir_entry->d_name,"",dir_entry->d_name);
+	    printf("<p>\n");
+	}
+	
+	    
 	dir_entry=readdir(manual_dir_stream);
     }
 
-    printf("<!-- This document was produced by sh-cgi a cgi gateway for stronghelp files. sh-cgi was written by V.R.Sanders (vince@kyllikki.fluff.org). sh-cgi is released under GPL version 2 and uses cgi-util a LGPL library by Bill Kendrick. The latest version is available from http://www.inkvine.fluff.org/~vince -->");
+    put_footer(0);
+    
     printf("</body>");
 
     free(manual_path);
