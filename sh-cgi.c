@@ -53,7 +53,7 @@ int put_footer(int back_ptr)
 	printf("<hr><div align=left><small>["CGI_NAME"]&nbsp;<a href=\""CGI_NAME"\">Back to list of manuals</a></div>\n");
 
     return back_ptr;
-    
+
 }
 
 int send_error(const char * err_txt)
@@ -62,11 +62,80 @@ int send_error(const char * err_txt)
     return 0;
 }
 
+struct treenode **find_treenode(struct treenode** parent,char * key)
+{
+    struct treenode * node;
+    int result;
+
+    while((node=*parent) !=NULL)
+    {
+	result=strcmp(key,node->filename);
+	if (result>0)
+	    parent=&node->right;
+	else if (result <0)
+	    parent=&node->left;
+	else
+	    break;
+    }
+    return parent;
+}
+
+int add_treenode(struct treenode** parent,char * new_entry)
+{
+    struct treenode ** link;
+    struct treenode * node;
+
+    link=find_treenode(parent,new_entry);
+    if (*link==NULL)
+    {
+	node = (struct treenode*)malloc(sizeof(struct treenode));
+	/* memory error abort the add */
+	if (node==NULL)
+	    return 1;
+	node->left=node->right=NULL;
+	node->filename=strdup(new_entry);
+	if(node->filename == NULL)
+	{
+	    /* dont add if strdup failed */
+	    free(node);
+	    return 1;
+	}
+	else
+	    *link=node;
+    }
+    else
+    {
+	/* already in tree - ignore atm */
+	return 1;
+    }
+    return 0;
+}
+
+int walk_tree(struct treenode* node)
+{
+    if (node->left != NULL)
+	walk_tree(node->left);
+
+    printf("<p>");
+    put_sh_href(node->filename,"",node->filename);
+    printf("\n");
+
+    if (node->right != NULL)
+	walk_tree(node->right);
+
+    free(node->filename);
+    free(node);
+
+    return 0;
+}
+
+
 int sh_manual_list(char* doc_root)
 {
     int file_name_len = 0;
     char * manual_path;
     struct stat manual_dir;
+    struct treenode * treeroot=NULL;
 
     /* for dir reading */
     DIR *manual_dir_stream;
@@ -113,17 +182,15 @@ int sh_manual_list(char* doc_root)
     while(dir_entry!=NULL)
     {
 	if (index(dir_entry->d_name,'.')==NULL)
-	{
-	    put_sh_href(dir_entry->d_name,"",dir_entry->d_name);
-	    printf("<p>\n");
-	}
-	
-	    
+	    add_treenode(&treeroot,dir_entry->d_name);
+
 	dir_entry=readdir(manual_dir_stream);
     }
 
+    walk_tree(treeroot);
+
     put_footer(0);
-    
+
     printf("</body>");
 
     free(manual_path);

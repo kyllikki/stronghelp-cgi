@@ -9,3 +9,10 @@
 #define DIR_BUF_SIZE 1024
 
 int put_footer(int);
+
+struct treenode
+{
+    char * filename;
+    struct treenode * left;
+    struct treenode * right;
+};

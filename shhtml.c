@@ -213,45 +213,74 @@ int put_href(char * url,char * link_text)
     else
 	printf("<!-- ran out of memory whilst producing link text -->\n");
 
-    return 0;    
+    return 0;
 }
 
 int put_sh_href(char * manual_url,char * page_url,char * link_text)
 {
-
+    char *p;
     char *href_url;
-    href_url=malloc(strlen("/cgi-bin/"CGI_NAME"?manual=&page=")+strlen(manual_url)+strlen(page_url)+1);
+    char *e_manual_url = NULL;
+    char *e_page_url = NULL;
+    size_t size = 0;
+    static char manual_prefix[] = "/cgi-bin/"CGI_NAME"?manual=";
+    static char page_prefix[] = "&page=";
 
-    if (href_url!=NULL)
+    if ((manual_url != NULL) && (*manual_url != '\0'))
     {
-	manual_url=escape_url(manual_url);
-
-	if (strlen(page_url)!=0)	    
-	{	    
-	    page_url=escape_url(page_url);
-
-	    sprintf(href_url,"/cgi-bin/"CGI_NAME"?manual=%s&page=%s",
-		    manual_url,
-		    page_url);	
-
-	    free(page_url);
-	}	
-	else
-	    sprintf(href_url,"/cgi-bin/"CGI_NAME"?manual=%s",
-		    manual_url);
-
-	free(manual_url);
-
-	put_href(href_url,link_text);
-
-	free(href_url);
+	e_manual_url = escape_url(manual_url);
+	if(e_manual_url==NULL)
+	{
+	    printf("<!-- ran out of memory while producing sh href (e_manual_url) -->\n");
+	    return 1;
+	}
+	size += strlen(manual_prefix) + strlen(e_manual_url);
     }
     else
-	printf("<!-- ran out of memory whilst producing sh href -->\n");
+    {
+	printf("<!-- bad manual url while producing sh href -->\n");
+	return 1;
+    }
+
+    if ((page_url != NULL) && (*page_url != '\0'))
+    {
+	e_page_url = escape_url(page_url);
+	if(e_page_url==NULL)
+	{
+	    free(e_manual_url);
+
+	    printf("<!-- ran out of memory while producing sh href (e_page_url) -->\n");
+	    return 1;
+	}
+	size += strlen(page_prefix) + strlen(e_page_url);
+    }
+
+    href_url = malloc(size + 1);
+    if (href_url == NULL)
+    {
+	free(e_manual_url);
+
+	if(e_page_url!=NULL)
+	    free(e_page_url);
+
+	printf("<!-- ran out of memory while producing sh href (href_url) -->\n");
+	return 1;
+    }
+
+    p = &href_url[sprintf(href_url,"%s%s", manual_prefix, e_manual_url)];
+    if (e_page_url != NULL)
+    {
+	sprintf(p,"%s%s", page_prefix, e_page_url);
+	free(e_page_url);
+    }
+    free(e_manual_url);
+
+    put_href(href_url, link_text);
+
+    free(href_url);
 
     return 0;
 }
-	    
 
 long html_fontprint(char *text,shhtml_status *page_status)
 {
@@ -323,10 +352,10 @@ long html_fontprint(char *text,shhtml_status *page_status)
 	{
 	    if (tolower(font_tag[0])=='h')
 		printf("<center>");
-	
+
 	    printf("<%s>",font_tag);
 	}
-	
+
 
 	font_text=html_deescape_text(tmp_text);
 	printf("%s",font_text);
@@ -661,9 +690,9 @@ long html_process_control_line(char *text,shhtml_status * page_status)
 char * skip_whitespace(char * in_str)
 {
     while ((in_str[0]!=0) && (isspace(in_str[0])))
-	in_str++;    
+	in_str++;
 
-    return in_str;    
+    return in_str;
 }
 
 long html_process_link(char* link,shhtml_status* page_status)
@@ -939,7 +968,7 @@ int html_output(FILE * imagef,char * manual_name,char * sh_page,long sh_page_len
     /* put our footer in as a comment */
 
     put_footer(1);
-    
+
     printf("</body>\n");
     return 0;
 

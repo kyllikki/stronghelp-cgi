@@ -1,5 +1,5 @@
 CGI_NAME= sh-cgi
-VERSION= 1.00
+VERSION= 1.10
 
 CGI_OBJ= cgi-util/cgi-util.o
 CGI_INC= cgi-util
@@ -7,12 +7,14 @@ CGI_INC= cgi-util
 CC= gcc
 BUILDDATE=$(shell date +'%e %b %Y')
 
-CFLAGS= $(OPT) -Wall -I$(CGI_INC)/ -DVERSION=\""$(VERSION)"\" -DBUILDDATE=\""$(BUILDDATE)"\" -DCGI_NAME=\""$(CGI_NAME)"\"
-
+#Comment for debug
 OPT= -O2
+#unbcomment for debug
 #DEBUG= -g
 
-LDFLAGS= $(DEBUG) $(OPT)
+CFLAGS= $(OPT) $(DEBUG) -Wall -I$(CGI_INC)/ -DVERSION=\""$(VERSION)"\" -DBUILDDATE=\""$(BUILDDATE)"\" -DCGI_NAME=\""$(CGI_NAME)"\"
+
+LDFLAGS= $(DEBUG)
 HFILES= sh-cgi.h shif.h shhtml.h
 CFILES= sh-cgi.c shif.c shhtml.c
 TARFILES= $(CFILES) $(HFILES) Makefile README LICENCE background.png background.gif
@@ -26,6 +28,7 @@ OBJ= sh-cgi.o shif.o shhtml.o $(CGI_OBJ)
 all: $(EXE)
 
 $(EXE): $(OBJ)
+	$(CC) $(LDFLAGS) $^ -o $@
 
 $(OBJ): $(HFILES)
 
@@ -38,7 +41,3 @@ tags: TAGS
 tar: $(TARFILES)
 	tar -cf $(TARNAME) $(TARFILES) cgi-util
 	gzip $(TARNAME)
-
-
-
-
