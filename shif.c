@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+#include <ctype.h>
 #include "shif.h"
 
 long lltoh(long value,int bsex)
@@ -113,8 +114,30 @@ dir_entry * shif_make_dir_entry(FILE *imagef,long offset,int bsex)
 
 }
 
+int check_range(unsigned char lower, unsigned char upper, unsigned char target)
+{
+    unsigned char temp;
 
-dir_entry * shif_finddirentry(FILE * imagef,const char * page_name,long offset,int bsex)
+    lower=tolower(lower);
+    upper=tolower(upper);
+    target=tolower(target);
+        
+    /* ensure range is not back to front */
+    if (lower > upper)
+    {     
+	temp=lower;
+	lower=upper;
+	upper=temp;     
+    }
+
+    if ((lower <= target) && (upper >= target))
+	return 1;
+
+    return 0; 
+}
+
+
+dir_entry * shif_finddirentry(FILE * imagef, const char * page_name, long offset, int bsex)
 {
     /* recursive directory entry finding routine
      * in theory this routine takes a file offset and a page name and finds the
@@ -122,7 +145,7 @@ dir_entry * shif_finddirentry(FILE * imagef,const char * page_name,long offset,i
      * sub directory if thats the best partial match
      */
 
-    /* stratagy is search directory elements
+    /* strategy is search directory elements
      * - if the page name is null return the !root entry
      * - if the page name contains a directory path find that directory
      *     and call ourselves with it clipping the page name as required
@@ -182,7 +205,7 @@ dir_entry * shif_finddirentry(FILE * imagef,const char * page_name,long offset,i
 		return shif_finddirentry(imagef,NULL,shif_lfromfile(imagef,offset+cur_dir_entry,bsex),bsex);
 	}
 
-	/* look for a best match */
+	/* look for a best prefix match */
 	if ((strncasecmp(page_name,dir_entry_name,strlen(dir_entry_name))==0)
 	    && (dir_entry_name_len>best_match_dir_entry_len)
 	    && (shif_lfromfile(imagef,(offset+cur_dir_entry+16),bsex) &0x100))
@@ -205,41 +228,73 @@ dir_entry * shif_finddirentry(FILE * imagef,const char * page_name,long offset,i
 	return shif_finddirentry(imagef,&page_name[strlen(dir_entry_name)],shif_lfromfile(imagef,offset+best_match_dir_entry,bsex),bsex);
     }
 
-    /* not found best match yet so lets try to find one with [] round it */
+    /* not found exact or prefix match yet so lets try to find one based on 
+       first letter grouping ie. with [] round it */
 
     cur_dir_entry=12;
 
-    while(cur_dir_entry<dir_extent)
+    while((cur_dir_entry<dir_extent) && (best_match_dir_entry==-1))
     {
 	dir_entry_name_len=shif_sfromfile(imagef,offset+cur_dir_entry+24,bsex,dir_entry_name,MAX_DIR_ENTRY_NAME_LEN);
-	/* look for a best match inside [] brackets*/
-	if (dir_entry_name[0]=='['
-	    && dir_entry_name[strlen(dir_entry_name)-1]==']'
-	    && (strncasecmp(page_name,&dir_entry_name[1],strlen(dir_entry_name)-2)==0)
-	    && (dir_entry_name_len>best_match_dir_entry_len)
-	    && (shif_lfromfile(imagef,(offset+cur_dir_entry+16),bsex) &0x100))
+	if (dir_entry_name[0]=='[' 
+	    && dir_entry_name[strlen(dir_entry_name)-1]==']')
 	{
-	    /* ok a match for all of the dir entry*/
-	    best_match_dir_entry=cur_dir_entry;
-	    best_match_dir_entry_len=dir_entry_name_len;
+	    /* match inside [] brackets*/
+	    switch (strlen(dir_entry_name))
+	    {
+	    case 3:
+		/* should be test for exact first char match */
+		if (dir_entry_name[1]==page_name[0])
+		 best_match_dir_entry=cur_dir_entry;
+		    break;     
+	    case 4:
+		/* checks for '-f' or 'f-' half specified ranges*/
+		if (dir_entry_name[1]=='-')
+		{
+		    if (check_range('a',dir_entry_name[2],page_name[0]))
+			best_match_dir_entry=cur_dir_entry;
+		}		    
+		else if (dir_entry_name[2]=='-')
+		{
+		    if (check_range(dir_entry_name[1],'z',page_name[0]))
+			best_match_dir_entry=cur_dir_entry;
+		}		    
+		break;
+     
+	    case 5:
+		/* tests for 'a-f' fully specified ranges */
+		if (dir_entry_name[2]=='-')
+		{
+		    if (check_range(dir_entry_name[1],
+				    dir_entry_name[3],
+				    page_name[0]))
+			best_match_dir_entry=cur_dir_entry;
+		}
+		break;
+	    default :
+		/* dont understand syntax in [] */
+		break;
+     
+	    }
 	}
-
 	/* point to next dir entry */
 	cur_dir_entry=cur_dir_entry+24+dir_entry_name_len;
-
     }
+    
 
-    /* check to see if we have a best [] surrounded match */
+    /* check to see if we found a match */
     if (best_match_dir_entry!=-1)
     {
 	dir_entry_name_len=shif_sfromfile(imagef,offset+best_match_dir_entry+24,bsex,dir_entry_name,MAX_DIR_ENTRY_NAME_LEN);
 
-	/* find page within best match directory
-	 *   unlike previous best match we pass the whole page name
+	/* 
+	 * find page within best match directory
+	 * unlike previous best match we pass the whole page name
 	 */
 	return shif_finddirentry(imagef,page_name,shif_lfromfile(imagef,offset+best_match_dir_entry,bsex),bsex);
     }
 
+    
     /* give up - the page isnt there */
     return NULL;
 

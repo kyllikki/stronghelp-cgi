@@ -1,3 +1,4 @@
+
 /*
  * shhtml.c part of sh-cgi
  * Copyright (C) 2000 V.R.Sanders
@@ -571,6 +572,14 @@ long html_process_control_line(char *text,shhtml_status * page_status)
     return 0;
 }
 
+char * skip_whitespace(char * in_str)
+{
+    while ((in_str[0]!=0) && (isspace(in_str[0])))
+	in_str++;    
+
+    return in_str;    
+}
+
 long html_process_link(char* link,shhtml_status* page_status)
 {
     char * manual_name=page_status->manual_name;
@@ -579,6 +588,7 @@ long html_process_link(char* link,shhtml_status* page_status)
     char * text;
     char * page_link;
 
+    /* find the => if present */
     text=index(link,'>');
     while ((text!=NULL) && (text[-1]=='\\'))
 	text=index(++text,'>');
@@ -611,6 +621,7 @@ long html_process_link(char* link,shhtml_status* page_status)
     {
 	/* parsing for stronghelp link */
 
+	/* look for colon - manual:page type link */
 	page_link=index(link_page,':');
 	if (page_link!=NULL)
 	{
@@ -622,6 +633,9 @@ long html_process_link(char* link,shhtml_status* page_status)
 	{
 	    page_link=link_page;
 	}
+
+	/* strip preceading spaces from the page_link */
+	page_link = skip_whitespace(page_link);
 
 	printf("<a href=\"/cgi-bin/sh-cgi?manual=%s&page=%s\">%s</a>\n",manual_name,page_link,link_name);
     }

@@ -1,7 +1,7 @@
 CGI_OBJ= cgi-util/cgi-util.o
 CGI_INC= cgi-util
 
-VERSION= 0.9
+VERSION= 0.95
 CC= gcc
 OPT= -O2
 DEBUG= -g

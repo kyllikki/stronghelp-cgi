@@ -25,7 +25,7 @@ sh-cgi uses cgi-util LGPL library by Bill Kendrick (see cgi-util directory)
 
 --------------------------------------------
 
-VERSION 0.9
+VERSION 0.95
 
 This is sh-cgi , it is a cgi gateway for the acess of stronghelp manuals by standard HTML browsers.
 
