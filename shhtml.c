@@ -91,59 +91,29 @@ char * html_get_line(char * sh_page,long *cur_offset,long max_offset)
     return &sh_page[tmp_offset];
 
 }
-
 char * convert_entity(unsigned char src_chr,char * buff)
 {
     switch(src_chr)
     {
-    case '\"' :
-	strcpy(buff,"\"");
-	break;
+    case '\"' : /* These characters are pased through unchanged. */
     case '#' :
-	strcpy(buff,"#");
-	break;
     case '{' :
-	strcpy(buff,"{");
-	break;
     case '}' :
-	strcpy(buff,"}");
-	break;
     case '\\' :
-	strcpy(buff,"\\");
-	break;
     case '/' :
-	strcpy(buff,"/");
-	break;
     case '_' :
-	strcpy(buff,"_");
-	break;
     case '*' :
-	strcpy(buff,"*");
-	break;
     case '=' :
-	strcpy(buff,"=");
-	break;
-    case '-' :
-	strcpy(buff,"-");
-	break;
-    case '<' :
-	strcpy(buff,"&lt;");
-	break;
-    case '>' :
-	strcpy(buff,"&gt;");
-	break;
-    case '&' :
-	strcpy(buff,"&amp;");
-	break;
-    case 9 :
-	strcpy(buff,"&nbsp;&nbsp;");
-	break;
-    case 0x8f :
-	strcpy(buff,"&#183;");
-	break;
-    default:
-	buff[0]=0;
-	break;
+    case '-' : buff[0] = src_chr; buff[1] = '\0'; break;
+
+    case '<' : strcpy(buff,"&lt;"); break;
+    case '>' : strcpy(buff,"&gt;"); break;
+    case '&' : strcpy(buff,"&amp;"); break;
+    case 9 : strcpy(buff,"&nbsp;&nbsp;"); break;
+    case 0x8f : strcpy(buff,"&#183;"); break;
+    case 0xdc : strcpy(buff,"*"); break;
+    case 0xde : strcpy(buff,"*"); break;
+    default: buff[0]=0; break;
     }
     /* return the end of the string */
     return &buff[strlen(buff)];
@@ -916,6 +886,8 @@ long html_process_line(char * line,shhtml_status * page_status)
 	case 0x8f :
 	case '&':
 	case '>':
+	case 0xdc : /* dunno yet! */
+	case 0xde : /* dunno yet! */
 	    /*	case 9:*/
 	    /* need escaping */
 	    html_put_entity(text[0]);
@@ -951,8 +923,6 @@ int html_output(FILE * imagef,char * manual_name,char * sh_page,long sh_page_len
     page_status.table=0;
     page_status.imagef=imagef;
     page_status.ftag=NULL;
-
-
 
     printf("<head><title>%s</title></head>\n",html_get_line(sh_page,&cur_offset,sh_page_len));
     printf("<BODY BGColor=\"#DDDDDD\" TEXT=\"#000000\" BackGround=\"/"SH_CGI_ROOT"/."BACKGROUND_IMAGE"\">\n");
