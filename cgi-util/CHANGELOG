@@ -1,0 +1,23 @@
+CHANGELOG for cgi-util
+
+2.0.4  - 1999.August.24 - The "unescape_url" code was too trusting.
+                          MJ Pomraning (pilcrow@mailbag.com)
+
+2.0.3  - 1999.August.13 - Some debugging code was left in 2.0.2.  It has been
+                          removed.
+                          Stan Osborne (stan@ana.com)
+
+2.0.2  - 1999.August.9 - If a POST-method submittion contained an "&" within
+                         one of the field's values, the value would be
+                         truncated.  This should be fixed.
+                         Ruediger Geys (aage@fen.baynet.de)
+
+                       - CGIUTILVER (defined in "cgi-util.h") now
+                         reports complete version number (2.0.2).
+                         Bill Kendrick (bill@newbreedsoftware.com)
+
+2.0.1  - 1999.July.12 - malloc() fix in cgi_init()
+                        Tadek Orlowski (orlowski@epnet.com)
+
+2.0    - 1999.July.12 - Initlial re-release
+                        Bill Kendrick (bill@newbreedsoftware.com)

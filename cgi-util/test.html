@@ -1,0 +1,41 @@
+<!-- test.html
+     Test form for cgi-util 2.x
+     by Bill Kendrick
+     bill@newbreedsoftware.com -->
+
+
+<!-- First, we begin an HTML form: -->
+
+<form action="test.cgi" method="post">
+
+<!-- As you can see, it uses the "POST" HTTP method, and when submitted,
+     will call up the "test.cgi" URL -->
+
+
+<!-- Now, we put some form fields on the screen: -->
+
+Name? <input type="text" name="name"><br>
+Age? <input type="text" name="age"><br>
+
+<!-- Those two are simple text forms, one's named "name", the other "age" -->
+
+
+Sex?
+<select name="sex">
+<option>Male</option>
+<option>Female</option>
+</select><br>
+
+<!-- Above is a pull-down menu.  Since we didn't specify "value"'s in
+     the "option" tags, the text ("Male") and ("Female") will be the values -->
+
+
+<!-- Finally, the all-important submit button: -->
+
+<input type="submit" name="sub" value="Ok">
+
+
+<!-- Oops, one last thing... end the form: -->
+
+</form><p>
+
