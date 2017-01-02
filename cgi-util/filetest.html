@@ -1,0 +1,38 @@
+<html><head><title>File-upload test form for cgi-util 2.x</title></head>
+<body>
+
+<!-- filetest.html
+     File-upload test form for cgi-util 2.x
+     by Bill Kendrick
+     bill@newbreedsoftware.com -->
+
+
+<!-- First, we begin an HTML form: -->
+
+<form action="filetest.cgi" method="post" ENCTYPE="multipart/form-data">
+
+<!-- As you can see, it uses the "POST" HTTP method, and when submitted,
+     will call up the "filetest.cgi" URL.  We most also supply the
+     "multipart/form-data" encoding type. -->
+
+
+<!-- Now, we put some form fields on the screen: -->
+
+Your name? <input type="text" name="name"><br>
+
+File? <input type="file" name="filename"><br>
+
+<!-- Notice the "file"-type input form, named "filename" -->
+
+
+<!-- Finally, the all-important submit button: -->
+
+<input type="submit" name="sub" value="Ok">
+
+
+<!-- Oops, one last thing... end the form: -->
+
+</form><p>
+
+
+</body></html>

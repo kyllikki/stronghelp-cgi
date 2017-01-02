@@ -58,7 +58,9 @@ char * escape_url(const char * s)
     return buffer;
 }
 
-char * html_get_line(char * sh_page,long *cur_offset,long max_offset)
+char * html_get_line(char *sh_page,
+                     long *cur_offset,
+                     long max_offset)
 {
     long wrk_offset = *cur_offset;
     char * line_end;
@@ -390,7 +392,7 @@ long html_include(char * text,shhtml_status * page_status)
 
     while (cur_offset<page_len)
     {
-	line = html_get_line(page_text,&cur_offset,page_len);
+	line = html_get_line(page_text, &cur_offset, page_len);
 	if (line==NULL) break;
 
 	html_process_line(line,page_status);
@@ -771,8 +773,8 @@ printf("<!-- %d -->",text[-1]);
 
 long html_process_line(char * line,shhtml_status * page_status)
 {
-    unsigned char * text=line;
-    char * tmp_text=text;
+    char *text = line;
+    char *tmp_text = text;
 
     /* skip preceading spaces */
     for(;(text[0]!=0)&&(text[0]==32);text++);
@@ -813,7 +815,7 @@ long html_process_line(char * line,shhtml_status * page_status)
     for(;(text[0]!=0);text++)
     {
 
-	switch(text[0])
+	switch((unsigned char)text[0])
 	{
 
 	case '\\':
@@ -906,13 +908,16 @@ long html_process_line(char * line,shhtml_status * page_status)
 }
 
 
-int html_output(FILE * imagef,char * manual_name,char * sh_page,long sh_page_len)
+int html_output(FILE * imagef,
+                const char *manual_name,
+                char *sh_page,
+                long sh_page_len)
 {
     long cur_offset = 0;
     char * line;
     shhtml_status page_status;
 
-    strncpy(page_status.manual_name,manual_name,1024);
+    strncpy(page_status.manual_name, manual_name, 1024);
     page_status.parent[0]=0;
     page_status.prefix[0]=0;
     page_status.postfix[0]=0;

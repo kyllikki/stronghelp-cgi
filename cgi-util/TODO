@@ -1,6 +1,0 @@
-TODO for cgi-util
-
-* Handle shell invoked CGI's again.
-* Handle grabbing multiple values from a singulary named set of fields.
-* Create cgi-util backwards-compatible API.
-* Add file-upload support.

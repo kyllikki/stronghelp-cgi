@@ -1,30 +1,52 @@
 /*
   cgi-util.h
   
-  version 2.0.4
+  version 2.2.0
   
   by Bill Kendrick <bill@newbreedsoftware.com>
-  and Mike Simons <msimons@fsimons01.erols.com>
+  and Mike Simons <msimons@moria.simons-clan.com>
+  and Gary Briggs <chunky@icculus.org>
+  
+  Other contributions; see CHANGES.txt
   
   New Breed Software
   http://www.newbreedsoftware.com/cgi-util/
   
-  April 6, 1996 - August 24, 1999
+  April 6, 1996 - May 16, 2004
 */
 
+#ifndef CGI_UTIL_H
+#define CGI_UTIL_H
 
-#define CGIUTILVER "2.0.4"
-
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+  
+#define CGIUTILVER "2.2.0"
+  
+  
 /* Form data (name/value entries): */
-
+  
 typedef struct entry_type
 {
   char * name;
   char * val;
+  char * content_type;
+  int content_length;
 } cgi_entry_type;
-
+  
 extern cgi_entry_type * cgi_entries;
+  
+  
+/* Cookie data (name/value pairs): */
+  
+typedef struct cookie_type
+{
+  char * name;
+  char * val;
+} cgi_cookie_type;
+
+extern cgi_cookie_type * cgi_cookies;
 
 
 /* Number of unique name/value entries found (by cgi_init() below). */
@@ -41,11 +63,15 @@ enum {
   CGIERR_NOT_BOOL,
   CGIERR_UNKNOWN_METHOD,
   CGIERR_INCORRECT_TYPE,
-  CGIERR_NULL_QUERY_STRING,
+  /*  CGIERR_NULL_QUERY_STRING, */
   CGIERR_BAD_CONTENT_LENGTH,
   CGIERR_CONTENT_LENGTH_DISCREPANCY,
   CGIERR_CANT_OPEN,
   CGIERR_OUT_OF_MEMORY,
+  CGIERR_NO_BOUNDARY,
+  CGIERR_NO_COOKIES,
+  CGIERR_COOKIE_NOT_FOUND,
+  CGIERR_N_OUT_OF_BOUNDS,
   CGIERR_NUM_ERRS
 };
 
@@ -71,6 +97,20 @@ enum {
 extern int cgi_request_method;
 
 
+enum {
+  CGITYPE_NONE,
+  CGITYPE_APPLICATION_X_WWW_FORM_URLENCODED,
+  CGITYPE_MULTIPART_FORM_DATA,
+  CGITYPE_UNKNOWN
+};
+
+/*
+  Content type:
+*/
+
+extern int cgi_content_type;
+
+
 /*
   Initializes CGI - receives form data (via either "post" or "get" method).
 */
@@ -86,12 +126,44 @@ void cgi_quit(void);
 
 
 /*
-  Searches for an entry (name) and returns its value or an empty string.
+  Searches a cookie by name and returns its value or NULL.
+
+  cookie_name = string (name) to search for.
+*/
+
+int cgi_parse_cookies(void);
+const char * cgi_getcookie(const char * cookie_name);
+
+
+/*
+  Counts the number of entries for a given name
   
   field_name = string (name) to search for.
 */
 
+int cgi_getnumentries(const char *field_name);
+
+
+/*
+  Searches for an entry (name) and returns its value or an empty string.
+  
+  field_name = string (name) to search for.
+  n = nth entry for this name
+*/
+
 const char * cgi_getentrystr(const char *field_name);
+const char * cgi_getnentrystr(const char *field_name, int n);
+
+
+/*
+  Searches for an entry (name) and returns its content-type string or NULL.
+  
+  field_name = string (name) to search for.
+  n = nth entry for this name
+*/
+
+const char * cgi_getentrytype(const char *field_name);
+const char * cgi_getnentrytype(const char *field_name, int n);
 
 
 
@@ -100,9 +172,11 @@ const char * cgi_getentrystr(const char *field_name);
   
   return = value, converted from string to integer.
   field_name = string (name) to search for.
+  n = nth entry for this name
 */
 
 int cgi_getentryint(const char *field_name);
+int cgi_getnentryint(const char *field_name, int n);
 
 
 
@@ -111,9 +185,11 @@ int cgi_getentryint(const char *field_name);
   
   return = value, converted from string to double.
   field_name = string (name) to search for.
+  n = nth entry for this name
 */
 
 double cgi_getentrydouble(const char *field_name);
+double cgi_getnentrydouble(const char *field_name, int n);
 
 
 
@@ -126,9 +202,11 @@ double cgi_getentrydouble(const char *field_name);
   
   return = determined by entry's value (yes/on=1, no/off=0, else def)
   field_name = string (name) to search for.
+  n = nth entry for this name
 */
 
 int cgi_getentrybool(const char *field_name, int def);
+int cgi_getnentrybool(const char *field_name, int def, int n);
 
 
 
@@ -174,3 +252,10 @@ void cgi_error(const char * reason);
 */
 
 const char * cgi_strerror(int err);
+
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* #ifdef CGI_UTIL_H */

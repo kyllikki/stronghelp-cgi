@@ -198,7 +198,7 @@ int sh_manual_list(char* doc_root)
     return 0;
 }
 
-FILE * open_manual(char * doc_root,char * manual_name)
+FILE * open_manual(const char * doc_root, const char *manual_name)
 {
     int file_name_len = 0;
     char * manual_path;
@@ -209,8 +209,7 @@ FILE * open_manual(char * doc_root,char * manual_name)
     file_name_len = strlen(doc_root) + strlen(SH_CGI_ROOT) + strlen(manual_name) + 4;
 
     manual_path=malloc(file_name_len);
-    if (manual_path==NULL)
-    {
+    if (manual_path==NULL) {
 	send_error("Unable to claim temporary memory");
 	return NULL;
     }
@@ -219,14 +218,12 @@ FILE * open_manual(char * doc_root,char * manual_name)
     strcat(manual_path,SH_CGI_ROOT);
 
     /* check if manual directory exists */
-    if (stat(manual_path,&manual_dir)==-1)
-    {
+    if (stat(manual_path,&manual_dir)==-1) {
 	send_error("Manual Directory doesnt exist or is not acesible");
 	return NULL;
     }
 
-    if (!S_ISDIR(manual_dir.st_mode))
-    {
+    if (!S_ISDIR(manual_dir.st_mode)) {
 	send_error("Manual Directory is not a Directory!");
 	return NULL;
     }
@@ -247,7 +244,10 @@ int close_manual(FILE * manual_file)
     return fclose(manual_file);
 }
 
-int sh_show_page(char * doc_root,char * manual_name,char * page_name)
+int
+sh_show_page(const char *doc_root,
+             const char *manual_name,
+             const char *page_name)
 {
 
     FILE * manual_file;

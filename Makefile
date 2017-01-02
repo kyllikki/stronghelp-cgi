@@ -1,5 +1,5 @@
 CGI_NAME= sh-cgi
-VERSION= 1.11
+VERSION= 1.12
 
 CGI_OBJ= cgi-util/cgi-util.o
 CGI_INC= cgi-util

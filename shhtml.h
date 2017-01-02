@@ -36,7 +36,7 @@ typedef struct
 
 
 /* function protoypes */
-int html_output(FILE *,char *,char *,long);
-long html_process_line(char *,shhtml_status *);
-int put_sh_href(char * ,char * ,char * );
+int html_output(FILE *, const char *, char *, long);
+long html_process_line(char *, shhtml_status *);
+int put_sh_href(char *, char *, char *);
 

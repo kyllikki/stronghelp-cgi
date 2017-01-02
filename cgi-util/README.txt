@@ -1,12 +1,12 @@
-README for cgi-util 2.0.4
+README.txt for cgi-util 2.2.1
 
-by Bill Kendrick
-bill@newbreedsoftware.com
-and Mike Simons
-msimons@fsimons01.erols.com
+by: Bill Kendrick <bill@newbreedsoftware.com>
+    Mike Simons <msimons@moria.simons-clan.com>
+    and others  (Other contributors listed in "CHANGES.txt")
+
 http://www.newbreedsoftware.com/cgi-util/
 
-June 16, 1999 - August 24, 1999
+June 16, 1999 - October 10, 2005
 
 
 WHAT IS IT?
@@ -18,7 +18,7 @@ WHAT IS IT?
 
   cgi-util allows you to grab data sent to your CGI program by way of
   forms or URL-encoded data.  Both "POST" and "GET" methods are handled
-  transparently.
+  transparently.  It also supports file-upload.  (NOTE: UNDER DEVELOPMENT!)
 
   cgi-util is probably not the most feature-filled library, but it
   is fast, simple and takes virtually no time to learn how to use.
@@ -180,8 +180,6 @@ FUNCTION DESCRIPTIONS
             variable was not set to an integer value,
           CGIERR_CONTENT_LENGTH_DISCREPENCY if the "CONTENT_LENGTH" set does
             not match the amount of data actually received by the CGI,
-          CGIERR_NULL_QUERY_STRING if the "QUERY_STRING" environment variable
-            is not set,
           CGIERR_UNKNOWN_METHOD if the "REQUEST_METHOD" was not set to
             "POST" or "GET" (the two understood by cgi-util), or
           CGIERR_OUT_OF_MEMORY if space could not be allocated for the
@@ -189,9 +187,17 @@ FUNCTION DESCRIPTIONS
 
         cgi_entry_type * cgi_entries
         ----------------------------
-          This will contain a collection of name/value pairs
+          This will contain a collection of names/values/types/lengths
             (the number of which is stored in "cgi_num_entries"), or
           NULL if an error occured.
+
+        int cgi_content_type
+        --------------------
+          CGITYPE_UNKNOWN if an unknown "CONTENT_TYPE" was set,
+          CGITYPE_APPLICATION_X_WWW_FORM_URLENCODED if the "CONTENT_TYPE"
+            was set to "application/x-www-form-urlencoded" (the typical type),
+          CGITYPE_MULTIPART_FORM_DATA if the "CONTENT_TYPE" was set to
+            "multipart/form-data" (normal for file-upload).
 
       The return value of "cgi_init()" is the value of "cgi_errno".
 
@@ -224,6 +230,10 @@ FUNCTION DESCRIPTIONS
         ------------
           Set to NULL.
 
+        int cgi_content_type
+        --------------------
+          Set to CGITYPE_NONE.
+
       Since the function is void, nothing is returned.
 
     char * cgi_getentrystr(char * field_name)
@@ -254,6 +264,34 @@ FUNCTION DESCRIPTIONS
 
         will be the text "john doe".
 
+    char * cgi_getnentrystr(char * field_name, int n)
+    -------------------------------------------------
+      Identical to "cgi_getentrystr()", but for forms with multiple
+      fields with the same name.  It returns the 'n'th field with
+      the name 'field_name'.
+
+      Use "cgi_numentries()" (see below) to determine how many (if any)
+      fields have the name you're interested in.
+
+      Example:
+      --------
+        If an HTML form has a number of checkboxes named "choice":
+
+            <input type="checkbox" name="choice" value="choc">Chocolate
+            <input type="checkbox" name="choice" value="vani">Vanilla
+
+        ...you can receive the values ("choc" and/or "vani") for the
+        checked items using this in your C code:
+
+            for (i = 0; i < cgi_numentries("choice"); i++)
+            {
+              ... cgi_getnentrystr("choice", i) ...
+            }
+
+        If "n" is larger than or equal the number of fields named
+        "field_name", or is less than 0, the global variable
+        "cgi_errno" is set to "CGIERR_N_OUT_OF_BOUNDS".
+
     int cgi_getentryint(char * field_name)
     --------------------------------------
       Like "cgi_getentrystr()", this function looks for a name/value
@@ -268,6 +306,12 @@ FUNCTION DESCRIPTIONS
       integer (for example, "abc" would return the integer 0),
       the global variable "cgi_errno" is set to "CGIERR_NOT_INTEGER".
 
+    int cgi_getnentryint(char * field_name, int n)
+    ----------------------------------------------
+      Identical to "cgi_getentryint()", but for forms with multiple
+      fields with the same name.  See "cgi_getnentrystr()" above
+      and "cgi_getnumentries()" below.
+
     int cgi_getentrydouble(char * field_name)
     -----------------------------------------
       This function is more or less identical to "cgi_getentryint()",
@@ -276,6 +320,12 @@ FUNCTION DESCRIPTIONS
       If the name/value pair is not found or the string is not an
       integer (for example, "abc" would return the double 0.0),
       the global variable "cgi_errno" is set to "CGIERR_NOT_DOUBLE".
+
+    int cgi_getnentrydouble(char * field_name, int n)
+    -------------------------------------------------
+      Identical to "cgi_getentrydouble()", but for forms with multiple
+      fields with the same name.  See "cgi_getnentrystr()" above
+      and "cgi_getnumentries()" below.
 
     int cgi_getentrybool(char * field_name, int def)
     ------------------------------------------------
@@ -288,6 +338,35 @@ FUNCTION DESCRIPTIONS
       is set to "CGIERR_NOT_BOOL", and the value returned is "def"
       (a default specified when the function is called).
 
+    int cgi_getnentrybool(char * field_name, int def, int n)
+    --------------------------------------------------------
+      Identical to "cgi_getentrybool()", but for forms with multiple
+      fields with the same name.  See "cgi_getnentrystr()" above
+      and "cgi_getnumentries()" below.
+
+    int cgi_getnumentries(char * field_name)
+    -----------------------------------------
+      Returns how many fields were returned with the name "field_name".
+      Use to determine what the maximum value for "n" should be when
+      calling cgi_getn...() functions.
+
+    const char * cgi_getcookie(const char * cookie_name)
+    ----------------------------------------------------
+      Searches the "HTTP_COOKIE" environment variable
+      (sent by the browser during the HTTP request) for a particular
+      cookie, and returns its value as a string.
+
+      If the cookie is not found, this function returns NULL.
+
+      This function sets the following global variable:
+
+        int cgi_errno
+        -------------
+          CGIERR_NONE if no errors occured.
+          CGIERR_NO_COOKIES if HTTP_COOKIE is not set.
+          CGIERR_COOKIE_NOT_FOUND if the cookie wasn't found.
+          CGIERR_OUT_OF_MEMORY if it could not create temporary space.
+
     int cgi_dump_no_abort(char * filename)
     --------------------------------------
       This opens a file and sends it to "stdout" (file descriptor 0),
@@ -297,7 +376,7 @@ FUNCTION DESCRIPTIONS
       you no longer need to recompile the CGI after editing that HTML.
       Changes take effect immediately.
 
-      This program sets the following global variable:
+      This function sets the following global variable:
 
         int cgi_errno
         -------------
@@ -305,7 +384,7 @@ FUNCTION DESCRIPTIONS
           CGIERR_CANT_OPEN if the file could not be opened.  (You should
             look at the C global "errno" to determine the exact error.)
 
-      Once the file has been sent out (if it was), the program returns
+      Once the file has been sent out (if it was), the function returns
       with the same value it set "cgi_errno" to.
 
     void cgi_dump(char * filename)
@@ -314,7 +393,7 @@ FUNCTION DESCRIPTIONS
       (in fact, it's actually a wrapper around that function).
 
       However, if it cannot open the file, rather than return with an
-      error code, this program sends HTML text out stating that it can't
+      error code, this function sends HTML text out stating that it can't
       open the file, including the C "strerror()" description of the error.
       It then aborts your CGI by calling "exit(0);".
 
@@ -326,7 +405,7 @@ FUNCTION DESCRIPTIONS
 
     void cgi_error(char * reason)
     -----------------------------
-      This program displays an HTML error message, starting with the word
+      This function displays an HTML error message, starting with the word
       "Error" as a level one header ("<h1>") and followed by the string you
       provide (the actual reason an error occured).
 
@@ -397,11 +476,6 @@ ERROR CODES
       The "CONTENT_TYPE" environment variable was not set to
       "application/x-www-form-urlencoded".
 
-    CGIERR_NULL_QUERY_STRING
-    ------------------------
-      The "QUERY_STRING" environment variable was not set at all
-      (which is necessary when using the "GET" request method).
-
     CGIERR_BAD_CONTENT_LENGTH
     -------------------------
       The "CONTENT_LENGTH" environment variable was not set to
@@ -423,13 +497,13 @@ ERROR CODES
       cgi_init().
 
 
-THE TEST PROGRAM
-----------------
-  To understand the test program, first open the "test.html" form in
-  a web browser.  (You need to open it via the HTTP protocol, not simply
-  opening it as a file!)
+THE TEST PROGRAMS
+-----------------
+  To understand the test program, first open the "test.html" or
+  "filetest.html" HTML file in a web browser.  (You need to open it via the
+  HTTP protocol, not simply opening it as a file!)
 
-  You'll notice the following on the page:
+  With "test.html", you'll notice the following on the page:
 
     * A type-in field labelled "Name?"
     * A type-in field labelled "Age?"
@@ -454,6 +528,28 @@ THE TEST PROGRAM
   "test.c"!
 
 
+  With "filetest.html", you'll see a simpler form:
+
+    * A type-in filed labelled "Name?"
+    * A file browse field labelled "File?" (typically these fields appear as
+      a type-in form with a "Browse" button next to it)
+    * A sumbit button labelled "Ok"
+
+  Select a file from your local filesystem (type it into the type-in field
+  or use the "Browse" button, for example), and then submit the form.
+  The CGI will be invoked and you'll see something similar to:
+
+    Hello.
+    name=john doe
+    filename=foo.bar
+    This file is 10234 bytes long.
+    Goodbye!
+
+  As you can see, the file you uploaded using the form has been processed,
+  and the size of the file (in bytes) is displayed by the CGI.  See
+  "filetest.c" to see how this CGI works.
+
+
 THE END
 -------
   Hopefully this library will come in useful.  If you have questions or
@@ -461,9 +557,7 @@ THE END
 
     bill@newbreedsoftware.com
 
-  If you wish to report a bug, use BugTrack:
-
-    http://www.newbreedsoftware.com/bugtrack/
-
 
 THANKS FOR USING cgi-util!
+
+End of README.txt
